@@ -10,6 +10,10 @@ public class PlayerController : MonoBehaviour
     private Vector3 _input;
     public bool isEnabled = false;
 
+    Ray cameraRay;                // The ray that is cast from the camera to the mouse position
+    RaycastHit cameraRayHit;    // The object that the ray hits
+
+
     private void Update()
     {
         if (!isEnabled)
@@ -18,7 +22,7 @@ public class PlayerController : MonoBehaviour
         }
 
         GatherInput();
-        Look();
+        LookTowardsMouse();
     }
 
     private void FixedUpdate()
@@ -42,6 +46,26 @@ public class PlayerController : MonoBehaviour
 
         var rot = Quaternion.LookRotation(_input.ToIso(), Vector3.up);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, rot, _turnSpeed * Time.deltaTime);
+    }
+
+    // Todo: Make this a helper function/script.
+    // Some Black Magic https://answers.unity.com/questions/805776/isometric-game-player-look-at-cursor.html.
+    private void LookTowardsMouse()
+    {
+        // Cast a ray from the camera to the mouse cursor
+        cameraRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        // If the ray strikes an object...
+        if (Physics.Raycast(cameraRay, out cameraRayHit))
+        {
+            // ...and if that object is the ground...
+            if (cameraRayHit.transform.tag == "Ground")
+            {
+                // ...make the cube rotate (only on the Y axis) to face the ray hit's position 
+                Vector3 targetPosition = new Vector3(cameraRayHit.point.x, transform.position.y, cameraRayHit.point.z);
+                transform.LookAt(targetPosition);
+            }
+        }
     }
 
     private void Move()
